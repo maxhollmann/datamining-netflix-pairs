@@ -1,17 +1,19 @@
-p = function(s, rows, bands) {
-  #r = siglen/bands
-  1 - (1 - s^rows) ^ bands
+source("jaccard_distribution.R")
+
+
+sensitivity = function(true_sim, rows, bands) {
+  1 - (1 - true_sim^rows) ^ bands
 }
 
-s = seq(0, 1, .001)
-sensitivity = p(s, rows=40, bands=3)
-dist = dbeta(xs, a, b)
+true_sim = seq(0, 1, .001)
+sens = sensitivity(true_sim, rows=7, bands=15)
+baseline = djaccard(true_sim)
 
 par(mfrow = c(1, 2))
-plot(s, sensitivity, type = 'l')
-lines(xs, dist)
+plot(true_sim, sens, type = 'l')
+lines(true_sim, baseline)
 
-plot(s, dist*sensitivity, type = 'l')
+plot(true_sim, baseline*sens, type = 'l')
 
 
 abline(v = .5)

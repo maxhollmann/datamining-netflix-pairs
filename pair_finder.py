@@ -7,9 +7,7 @@ import pickle
 
 
 class PairFinder:
-    """
-    MinHash/LSH algorithm to find pairs of similar documents.
-    """
+    """MinHash/LSH algorithm to find pairs of similar documents."""
 
     def __init__(self, data, sig_len, bands, max_buckets):
         if sig_len % bands != 0:
@@ -25,14 +23,13 @@ class PairFinder:
         self.max_buckets = max_buckets
 
     def prepare(self):
-        """Initializes the signature matrix and fills buckets."""
+        """Initialize everything that's required."""
         self._compute_document_shingle_matrix()
         self._compute_signatures()
         self._fill_buckets()
 
     def candidates(self):
-        """
-        Yields all candidate pairs and the similarity of their signatures.
+        """Yields all candidate pairs and the similarity of their signatures.
 
         Yields:
             tuple: ((c1, c2), similarity)
@@ -47,10 +44,10 @@ class PairFinder:
 
     def count_candidates(self):
         """Returns the number of candidate pairs without iterating over all of them."""
-        return np.sum([
+        return int(np.sum([
             n * (n - 1) / 2
             for n in [len(b) for b in self.buckets.values()]
-        ])
+        ]))
 
     def sig_sim(self, i, j):
         """Returns the similarity of signatures for documents i and j."""
@@ -63,7 +60,14 @@ class PairFinder:
         return np.sum(np.logical_and(d1, d2)) / np.sum(np.logical_or(d1, d2))
 
 
+    def print_stats(self):
+        """Prints useful stats for model diagnostics."""
+        print("Used {}/{} buckets".format(len(self.buckets), self.max_buckets))
+        print("{} candidate pairs".format(self.count_candidates()))
+
+
     ##### Private methods
+
     def _compute_document_shingle_matrix(self):
         # CSC -> 16s for creation, .988s per random row permutation
         # CSR -> 37s for creation, .537s per random row permutation
@@ -117,10 +121,15 @@ class PairFinder:
 
 
 
+
 class CachedPairFinder(PairFinder):
-    """
-    Subclass of PairFinder that wraps computing intensive methods
-    to try loading the results from cache first.
+    """Cached version of PairFinder.
+
+    This class wraps computing intensive methods to try loading the
+    results from cache first.
+
+    If no cache is found, the computation is done by PairFinder and
+    the result saved for the next run.
     """
 
     def _compute_document_shingle_matrix(self):
@@ -138,7 +147,7 @@ class CachedPairFinder(PairFinder):
         try:
             self.S = cache.load(cache_file)
             assert self.S.shape == (self.sig_len, self.n_docs)
-            print("Using cached S")
+            print("Using cached signatures")
         except:
             super()._compute_signatures()
             cache.save(self.S, cache_file)
@@ -156,6 +165,12 @@ class CachedPairFinder(PairFinder):
 
 
 def build(*args, **kwargs):
+    """Builds either PairFinder or CachedPairFinder.
+
+    Args:
+        cached (bool, optional): When true, builds a CachedPairFinder. Defaults to False.
+        All other arguments are forwarded to the constructor of the class being built.
+    """
     cached = kwargs.get('cached', False)
     del kwargs['cached']
 

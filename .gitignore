@@ -4,3 +4,4 @@ cached_*
 *.csv
 __pycache__/
 .Rhistory
+*.pdf
