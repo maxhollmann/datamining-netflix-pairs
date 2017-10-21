@@ -1,0 +1,83 @@
+Evaluation
+==========
+
+Program called like:
+
+    python main.py <random seed int> <data file.npy>
+
+Write pairs with Jaccard Similarity > .5 to results.txt, on each line "u1, u2" (u1 < u2).
+
+Should find 100-200 pairs.
+
+Program is killed after 30 minutes if not already done.
+
+
+
+The baseline grade, 6.0, will be given if your algorithm terminates in less than 30 minutes, producing at
+least 10 valid pairs of similar users. Moreover, you can get up to 1.0 extra point for:
+• the average number of found pairs per minute,
+• the total number of found pairs (over 5 different runs),
+• the median run time (over 5 different runs),
+• code readability, elegance.
+
+
+
+
+Hints
+=====
+It will be:
+
+Python: 3.4.5
+numpy: 1.12.1
+
+and most likely benchmarking will be done on octiron.
+
+
+
+
+Hereby some hints that should help you to produce some nice results for the third assignment:
+
+1) It is essential to select a right method of representing the input data (the Movie x User or User x Movie data). I would strongly recommend to use the 'sparse' package from Scipy library: https://docs.scipy.org/doc/scipy-0.18.1/reference/sparse.html
+
+The advantage of sparse matrices is that they store only non-zero elements, so you save memory and, more important, they support very efficient implementations of rearranging columns or rows (like B=A[:, randomly_permuted_column_indices]). There are several types of sparse matrices:
+
+coo_matrix(arg1[, shape, dtype, copy])     A sparse matrix in COOrdinate format.
+csc_matrix(arg1[, shape, dtype, copy])     Compressed Sparse Column matrix
+csr_matrix(arg1[, shape, dtype, copy])     Compressed Sparse Row matrix
+lil_matrix(arg1[, shape, dtype, copy])     Row-based linked list sparse matrix
+
+You can experiment with them to find out which would work best for you. There is no single recommendation I can give - in the past few years students were successfully using all these types!
+
+2) Your dataset is so small that you can use random permutations of columns or rows (instead of hash functions). In this way you are avoiding time consuming loops.
+Also hashing fragments of the signatures (to find buckets) can be avoided with help or creative usage of Python's dictionaries. For example, if S represents a signature matrix then buckets can be stored in a dictionary B which is indexed with the help of fragments of the signature, eg., B[tuple(S[0:4, 7])] might point to a list of users that fall to a bucket specified by S[0:4, 7]. The 'tuple' function is used here to convert the fragment of signature array S to a "hashable" object that can be used for indexing the dictionary B.  (Actually, dictionaries internally use hashing, so with this trick we implicitly use hashing.)
+
+3) Relatively short signatures (50-150) should result in good results (and take less time to compute).
+
+4) Be careful when generating the output file! Keep in mind that numbering of users and movies start with 1, while Python indexing starts with 0. Check (on the 'true data') if the similarity of users listed in your output really exceeds 0.5. Test your program from the command prompt using various value of the random seed.
+
+5) Avoid loops whenever possible! Python is an interpreted language and loops are very expensive! To give an example:
+
+#summing up 10M integers without loops:
+z=np.array(range(10**7))
+%time s=np.sum(z)
+Wall time: 31.2 ms
+
+#The same with loops:
+s=0
+%time for i in range(10**7): s+=z[i]
+Wall time: 4.8 s
+
+
+
+
+> • the average number of found pairs per minute,
+> • the total number of found pairs (over 5 different runs),
+> • the median run time (over 5 different runs),
+> Could you let us know in what way each of these play a role? Do you have a fixed formula in the evaluation script?
+
+No, not really. A heuristic that I apply is to calculate the average rank over all these factors (i.e., sorting all solutions by the first criterion, find rank for each submission, then the same over the second criterion, etc.), and the smallest "average rank" wins. Thus, if your solution would the best one on the first two criteria and the second one on the third criterion, its average rank would be (1+1+2)/3. And then all solutions are sorted by the average rank and then I visually decide on grades. But in practice, it's pretty easy: by looking at the distribution of ranks one can easily see which solutions are best which are worse. Last year I noticed that the first criterion was most meaningful - the winner in this category was also winning on all other categories.
+
+> Also, do you penalize for false positives?
+
+O, yes - they are not allowed! Otherwise I would receive very long listings of all pairs ;-)
+Wojtek

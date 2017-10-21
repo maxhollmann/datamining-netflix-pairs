@@ -1,2 +1,6 @@
 *.npy
 *.npz
+cached_*
+*.csv
+__pycache__/
+.Rhistory

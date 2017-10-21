@@ -25,22 +25,42 @@ class PairFinder:
         self.max_buckets = max_buckets
 
     def prepare(self):
-        """Initializes the signature matrix and fills buckets"""
+        """Initializes the signature matrix and fills buckets."""
         self._compute_document_shingle_matrix()
         self._compute_signatures()
         self._fill_buckets()
 
     def candidates(self):
-        """Iterates over all candidates pairs, yielded as tuples of indices"""
+        """
+        Yields all candidate pairs and the similarity of their signatures.
+
+        Yields:
+            tuple: ((c1, c2), similarity)
+        """
         for b in self.buckets.values():
             b = list(b)
             for i in range(len(b)):
-                for j in range(i, len(b)):
-                    yield (b[i], b[j])
+                for j in range(i + 1, len(b)):
+                    c1, c2 = b[i], b[j]
+                    sim = self.sig_sim(c1, c2)
+                    yield ((c1, c2), sim)
+
+    def count_candidates(self):
+        """Returns the number of candidate pairs without iterating over all of them."""
+        return np.sum([
+            n * (n - 1) / 2
+            for n in [len(b) for b in self.buckets.values()]
+        ])
 
     def sig_sim(self, i, j):
-        """Returns the similarity of signatures for documents i and j"""
+        """Returns the similarity of signatures for documents i and j."""
         return np.sum(self.S[:, i] == self.S[:, j]) / self.sig_len
+
+    def jaccard_similarity(self, i, j):
+        """Returns the Jaccard similarity of documents i and j from the document-shingle matrix."""
+        d1 = self.DS[:, i].toarray()
+        d2 = self.DS[:, j].toarray()
+        return np.sum(np.logical_and(d1, d2)) / np.sum(np.logical_or(d1, d2))
 
 
     ##### Private methods
@@ -56,11 +76,10 @@ class PairFinder:
     def _compute_signatures(self):
         self.S = np.zeros((self.sig_len, self.n_docs))
 
+        # 12.7523s * siglen
         print("Computing signatures...")
         t = time.time()
         for i in range(self.sig_len):
-            t2 = time.time()
-
             # Generate random permutation of rows
             DSp = self.DS[np.random.permutation(self.DS.shape[0]), :]
 
@@ -73,7 +92,7 @@ class PairFinder:
             # index of first non-zero row per column (next part of S)
             self.S[i, :] = nz_row[first_nz_i]
 
-            print("  {}/{} done in {}s".format(i, self.sig_len, time.time() - t2))
+            print("  {}/{} done in {}s".format(i+1, self.sig_len, time.time() - t), end = '\r')
 
         print("Done in {}s".format(time.time() - t))
 
@@ -86,15 +105,13 @@ class PairFinder:
         self.buckets = defaultdict(lambda: set())
 
         for b in range(self.n_bands):
-            t2 = time.time()
-
             band_idx = slice(b*band_len, b*band_len + band_len)
 
             for d in range(self.n_docs):
                 bucket = hash(tuple(self.S[band_idx, d])) % self.max_buckets
                 self.buckets[bucket].add(d)
 
-            print("  Band {}/{} done in {}s".format(b, self.n_bands, time.time() - t2))
+            print("  {}/{} done in {}s".format(b+1, self.n_bands, time.time() - t), end = '\r')
 
         print("Done in {}s".format(time.time() - t))
 
