@@ -6,7 +6,7 @@ sensitivity = function(true_sim, rows, bands) {
 }
 
 true_sim = seq(0, 1, .001)
-sens = sensitivity(true_sim, rows=7, bands=15)
+sens = sensitivity(true_sim, rows=6, bands=14)
 baseline = djaccard(true_sim)
 
 par(mfrow = c(1, 2))

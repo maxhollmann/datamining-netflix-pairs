@@ -27,8 +27,11 @@ def count_lines_in_file(filename):
 def perform(params):
     run_id = datetime.now().isoformat()
     results_file = "experiment_{}.txt".format(run_id)
+    stdout_file = open("experiment_{}_stdout".format(run_id), "w")
+    stderr_file = open("experiment_{}_stderr".format(run_id), "w")
 
     cmd = [
+        #"ulimit", "-Sv", "8000000000",
         "python3", "main.py",
         "--results={}".format(results_file)
     ] + ["--{}".format("=".join([k, str(v)])) for k, v in params.items()] + [
@@ -38,7 +41,7 @@ def perform(params):
     print("Run {}: {}".format(run_id, " ".join(cmd)))
 
     start_t = time.time()
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+    with subprocess.Popen(cmd, stdout=stdout_file, stderr=stderr_file) as proc:
         last_count = None
         running = True
 
@@ -63,7 +66,7 @@ def perform(params):
             except subprocess.TimeoutExpired:
                 pass
 
-        print(proc.returncode)
+            stdout_file.flush(); stderr_file.flush()
 
 
 def main(args):
@@ -84,7 +87,6 @@ def main(args):
     grid = [p for p in grid if p['bands'] * p['rows'] <= 150]
 
     print("{} configurations".format(len(grid)))
-    print(grid)
     print("Starting {} workers".format(args.jobs))
     print("")
 
