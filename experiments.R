@@ -38,4 +38,4 @@ p2 = ggplot(end, aes(x = bands, y = rows,
 grid.arrange(p1, p2, ncol = 2)
 
 
-print(end[order(end$count), c("batch", "bands", "rows", "sig_len", "max_buckets", "count", "ppm")])
+print(end[order(end$ppm), c("batch", "bands", "rows", "sig_len", "max_buckets", "count", "ppm")])

@@ -1,6 +1,6 @@
 d = read.csv("out/jaccard_dist.csv", header = T)
 d = d[!duplicated(d[, c("u1", "u2")]), ]
-
+d = d[1:7000, ]
 
 
 djaccard = function(sim, p = opt$estimate) {
@@ -23,3 +23,6 @@ lines(s, djaccard(s, opt$estimate), col = 'red')
 
 legend(0.25, 6, legend = c("Data", "Fitted distribution"), lwd = 1, col = c('green', 'red'))
 
+
+#plot(jac_sim ~ sig_sim, d)
+#abline(0, 1, col = 'green')

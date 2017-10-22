@@ -14,12 +14,12 @@ def default(data, pf, args, start_t):
     option).
     """
 
-    print("Getting all candidates... ", end = '')
+    print("Getting all candidates...")
     t = time.time()
     candidates = list(pf.candidates())
     print("Done in {}s".format(time.time() - t))
 
-    print("Sorting candidates... ", end = '')
+    print("Sorting candidates...")
     t = time.time()
     candidates = sorted(candidates, key = lambda c: -c[1])
     print("Done in {}s".format(time.time() - t))
@@ -99,12 +99,35 @@ def get_jaccard_distribution(data, pf, args, start_t):
     distribution to the data.
     """
     csv = CsvWriter("out/jaccard_dist.csv", append = True)
-    csv.write_header(['u1', 'u2', 'jac_sim'])
+    csv.write_header(['u1', 'u2', 'jac_sim', 'sig_sim'])
 
     for i, (u1, u2) in enumerate(zip(np.random.permutation(pf.n_docs),
                                      np.random.permutation(pf.n_docs))):
         if u1 == u2: next
         print("Wrote {} similarities".format(i), end = '\r')
-        csv.write([u1, u2, pf.jaccard_similarity(u1, u2)])
+        csv.write([u1, u2, pf.jaccard_similarity(u1, u2), pf.sig_sim(u1, u2)])
+
+    return True
+
+
+def benchmark(data, pf, args, start_t):
+    """Runs benchmarks for different things."""
+    print("Setup time: {}s".format(time.time() - start_t))
+
+    run_all = args.run == 'all'
+
+    if run_all or args.run == 'jaccard_similarity':
+        i1 = np.random.permutation(pf.n_docs)
+        i2 = np.random.permutation(pf.n_docs)
+
+        print("Burn in...")
+        for i in range(1000):
+            pf.jaccard_similarity(i1[i], i2[i])
+
+        print("Start... ")
+        t = time.time()
+        for i in range(3000):
+            pf.jaccard_similarity(i1[i], i2[i])
+        print("Done in {}s".format(time.time() - t))
 
     return True

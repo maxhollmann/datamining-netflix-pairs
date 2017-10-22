@@ -11,7 +11,9 @@ from util import ensure_directory
 
 
 csv = CsvWriter("out/experiments.csv", append = True)
-csv.write_header(['run_id', 'bands', 'rows', 'max_buckets', 'time', 'count'])
+csv.write_header(['batch_id', 'run_id', 'bands', 'rows', 'max_buckets', 'time', 'count'])
+
+batch_id = datetime.now().isoformat()
 
 
 def count_lines_in_file(filename):
@@ -57,7 +59,8 @@ def perform(params):
             count = count_lines_in_file(results_file)
             if count != last_count:
                 print("Run {}   Count at {}s: {}".format(run_id, int(elapsed), count))
-                csv.write([run_id, params['bands'], params['rows'], params['max-buckets'],
+                csv.write([batch_id, run_id,
+                           params['bands'], params['rows'], params['max-buckets'],
                            elapsed, count])
                 last_count = count
 

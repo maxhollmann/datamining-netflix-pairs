@@ -98,6 +98,13 @@ if __name__ == '__main__':
                                                 help=cmd_help(commands.console))
     parser_console.set_defaults(command=commands.console)
 
+    # benchmark command
+    parser_benchmark = command_parsers.add_parser('benchmark',
+                                                  help=cmd_help(commands.benchmark))
+    parser_benchmark.set_defaults(command=commands.benchmark)
+    parser_benchmark.add_argument('--run', default="all",
+                                  help='Which benchmark to run. Default: all.')
+
     args = parser.parse_args(sys.argv[1:])
 
 

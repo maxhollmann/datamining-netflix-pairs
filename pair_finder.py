@@ -18,6 +18,9 @@ Args:
         to prevent collisions.
     signature_method (string): Method of generating signatures. Can be
         'minhash' or 'permutation'.
+    use_sparse (bool): Whether to use a sparse or dense document-shingle
+        matrix. Dense consumes more memory, but makes computing Jaccard-
+        similarities many orders of magnitude faster.
 
     sig_len must be divisible by bands.
 """
@@ -27,7 +30,7 @@ class PairFinder:
     """MinHash/LSH algorithm to find pairs of similar documents."""
 
     def __init__(self, data, sig_len, bands, max_buckets,
-                 signature_method='minhash'):
+                 signature_method='minhash', use_sparse=False):
         if sig_len % bands != 0:
             raise Exception("sig_len ({}) must be divisible by bands ({})".format(sig_len, bands))
 
@@ -40,6 +43,10 @@ class PairFinder:
         self.n_bands = bands
         self.max_buckets = max_buckets
         self.signature_method = signature_method
+        self.sparse_ds = use_sparse
+
+        if self.signature_method == 'permutation' and !self.sparse_ds:
+            raise RuntimeError("Permutation is only supported with a sparse matrix.")
 
     def prepare(self):
         """Initialize everything that's required."""
@@ -86,15 +93,20 @@ class PairFinder:
 
     def jaccard_similarity(self, i, j):
         """Returns the Jaccard similarity of documents i and j from the document-shingle matrix."""
-        d1 = self.DS[:, i].toarray()
-        d2 = self.DS[:, j].toarray()
-        return np.sum(np.logical_and(d1, d2)) / np.sum(np.logical_or(d1, d2))
+        if self.sparse_ds:
+            d1 = self.DS[:, i].toarray()
+            d2 = self.DS[:, j].toarray()
+        else:
+            d1 = self.DS[:, i]
+            d2 = self.DS[:, j]
+        return np.logical_and(d1, d2).sum() / np.logical_or(d1, d2).sum()
 
 
     def print_stats(self):
         """Prints useful stats for model diagnostics."""
         print("Used {}/{} buckets".format(len(self.buckets), self.max_buckets))
         print("{} candidate pairs".format(self.count_candidates()))
+
 
 
     ##### Private methods
@@ -104,7 +116,10 @@ class PairFinder:
         # CSR -> 37s for creation, .537s per random row permutation
         print("Computing document-shingle matrix...")
         t = time.time()
-        self.DS = sparse.csr_matrix((self.n_shingles + 1, self.n_docs + 1), dtype=np.uint8)
+        if self.sparse_ds:
+            self.DS = sparse.csr_matrix((self.n_shingles + 1, self.n_docs + 1), dtype=np.uint8)
+        else:
+            self.DS = np.zeros((self.n_shingles + 1, self.n_docs + 1), dtype=np.uint8)
         self.DS[self.shingles, self.docs] = 1
         print("Done in {}s".format(time.time() - t))
 
@@ -132,16 +147,24 @@ class PairFinder:
 
         self.S = np.full((self.sig_len, self.n_docs), prime)
 
+        if self.sparse_ds:
+            csr = self.DS
+        else:
+            csr = sparse.csr_matrix(self.DS, dtype=np.uint8)
+
         for r in range(self.n_shingles): # row r
             if r % 100 == 0:
                 print("{}% done".format(int(r / self.n_shingles * 100)), end = '\r')
 
-            _, docs = np.nonzero(self.DS[r, :])
+            _, docs = np.nonzero(csr[r, :])
             h = np.add(np.outer(a, r), b) % prime
             self.S[:, docs] = np.minimum(self.S[:, docs], h)
 
     def _compute_signatures_permutation(self):
-        """Creates document signatures using random row permutations."""
+        """Creates document signatures using random row permutations.
+
+        Not supported when using a dense document-shingle matrix.
+        """
         self.S = np.zeros((self.sig_len, self.n_docs))
 
         for i in range(self.sig_len):
