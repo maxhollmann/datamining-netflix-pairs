@@ -1,38 +1,57 @@
 import numpy as np
 from datetime import datetime
+import time
 
 from csv_writer import CsvWriter
 
+"""Commands that can be called from the command line."""
 
-def default(data, pf, args):
+
+def default(data, pf, args, start_t):
     """Evaluates candidates, highest signature similarity first.
 
     Results are written to the file given by args.results (--results
     option).
     """
-    candidates = list(pf.candidates())
-    candidates = sorted(candidates, key = lambda c: -c[1])
 
-    csv_file = args.results
+    print("Getting all candidates... ", end = '')
+    t = time.time()
+    candidates = list(pf.candidates())
+    print("Done in {}s".format(time.time() - t))
+
+    print("Sorting candidates... ", end = '')
+    t = time.time()
+    candidates = sorted(candidates, key = lambda c: -c[1])
+    print("Done in {}s".format(time.time() - t))
+
+    csv_file = args.results if 'results' in args else 'results.txt'
     csv = CsvWriter(csv_file, append = False)
 
+    print("Verifying candidates...")
     found = 0
     for i, ((c1, c2), sim) in enumerate(candidates):
-        if pf.jaccard_similarity(c1, c2) >= .5:
-            c1, c2 = min(c1, c2), max(c1, c2)
-            csv.write([c1 + 1, c2 + 1])
+        jac_sim = pf.jaccard_similarity(c1, c2)
+        elapsed_t = time.time() - start_t
+
+        if jac_sim >= .5:
+            c1, c2 = min(c1, c2) + 1, max(c1, c2) + 1
+            if args.extended:
+                csv.write([c1, c2, sim, jac_sim, i, elapsed_t])
+            else:
+                csv.write([c1, c2])
             found += 1
-            print("Found {} (at signature similarity {})".format(found, sim), end = '\r')
+            print("Found {} (at signature similarity {}, after {}s)".format(found, sim, elapsed_t), end = '\r')
 
     return True
 
 
-def console(data, pf, args):
+def console(data, pf, args, start_t):
     """Simply opens a prompt after preparing the algorithm."""
     import code; code.interact(local=dict(globals(), **locals()))
+    return True
 
 
-def get_candidate_distribution(data, pf, args):
+def get_candidate_distribution(data, pf, args, start_t):
     """Samples pairs from candidates, stratified by signature similarity.
 
     The result is stored in a CSV, including the signature similarity,
@@ -73,7 +92,7 @@ def get_candidate_distribution(data, pf, args):
     return True
 
 
-def get_jaccard_distribution(data, pf, args):
+def get_jaccard_distribution(data, pf, args, start_t):
     """Samples random pairs and saves their Jaccard similarity to CSV.
 
     The result is used by jaccard_distribution.R to fit an

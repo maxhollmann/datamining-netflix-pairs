@@ -1,7 +1,10 @@
+import os
+
+
 def calculate_algorithm_params(args):
     if args.sig_len is None and args.bands is None and args.rows is None:
-        sig_len = 105
-        bands = 15
+        sig_len = 133
+        bands = 19
     elif args.sig_len and args.bands:
         sig_len = args.sig_len
         bands = args.bands
@@ -15,3 +18,13 @@ def calculate_algorithm_params(args):
         raise ValueError("You need to specify two of the arguments --sig-len, --rows, and --bands")
 
     return sig_len, bands
+
+
+def ensure_directory(d = None, f = None):
+    """Create directory if it doesn't exist."""
+    if d is None:
+        assert f is not None
+        d = os.path.dirname(f)
+
+    if d != '' and not os.path.exists(d):
+        os.makedirs(d)

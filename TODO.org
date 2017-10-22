@@ -1,3 +1,6 @@
 * TODO See if data can be deleted after creating DS
 * TODO Optimize Signature creation
 ** DONE Try MinHashing
+* TODO Stop criterion
+** Just before 30 minutes
+** When pairs per minute starts decreasing

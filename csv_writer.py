@@ -1,12 +1,12 @@
 import csv
 import os
 
+from util import ensure_directory
+
+
 class CsvWriter:
     def __init__(self, filename, append = False):
-        # create directory if it doesn't exist
-        directory = os.path.dirname(filename)
-        if directory != '' and not os.path.exists(directory):
-            os.makedirs(directory)
+        ensure_directory(f=filename)
 
         # open file in appropriate mode
         mode = 'a' if append else 'w'

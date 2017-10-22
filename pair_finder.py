@@ -2,14 +2,32 @@ import numpy as np
 from scipy import sparse
 from collections import defaultdict
 import time
-import cache
 import pickle
+
+from util import ensure_directory
+
+
+"""Pair-finder algorithm using min-hashing and location sensitive hashing.
+
+Args:
+    data (pandas.DataFrame): Data frame with two columns (document_ids,
+        shingle_ids).
+    sig_len (int): Number of hashes per signature.
+    bands (int): Number of signature segments.
+    max_buckets (int): Maximum number of buckets. Should be high enough
+        to prevent collisions.
+    signature_method (string): Method of generating signatures. Can be
+        'minhash' or 'permutation'.
+
+    sig_len must be divisible by bands.
+"""
 
 
 class PairFinder:
     """MinHash/LSH algorithm to find pairs of similar documents."""
 
-    def __init__(self, data, sig_len, bands, max_buckets):
+    def __init__(self, data, sig_len, bands, max_buckets,
+                 signature_method='minhash'):
         if sig_len % bands != 0:
             raise Exception("sig_len ({}) must be divisible by bands ({})".format(sig_len, bands))
 
@@ -21,6 +39,7 @@ class PairFinder:
         self.sig_len = sig_len
         self.n_bands = bands
         self.max_buckets = max_buckets
+        self.signature_method = signature_method
 
     def prepare(self):
         """Initialize everything that's required."""
@@ -63,7 +82,7 @@ class PairFinder:
 
     def sig_sim(self, i, j):
         """Returns the similarity of signatures for documents i and j."""
-        return np.sum(self.S[:, i] == self.S[:, j]) / self.sig_len
+        return np.mean(self.S[:, i] == self.S[:, j])
 
     def jaccard_similarity(self, i, j):
         """Returns the Jaccard similarity of documents i and j from the document-shingle matrix."""
@@ -91,9 +110,16 @@ class PairFinder:
 
     def _compute_signatures(self):
         # 12.7523s * siglen
-        print("Computing signatures...")
+        print("Computing signatures using {}...".format(self.signature_method))
         t = time.time()
-        self._compute_signatures_minhash()
+
+        if self.signature_method == 'minhash':
+            self._compute_signatures_minhash()
+        elif self.signature_method == 'permutation':
+            self._compute_signatures_permutation()
+        else:
+            raise ValueError("'{}' is not a signature method.".format(self.signature_method))
+
         print("Done in {}s".format(time.time() - t))
 
     def _compute_signatures_minhash(self):
@@ -114,7 +140,7 @@ class PairFinder:
             h = np.add(np.outer(a, r), b) % prime
             self.S[:, docs] = np.minimum(self.S[:, docs], h)
 
-    def _compute_signatures_permutations(self):
+    def _compute_signatures_permutation(self):
         """Creates document signatures using random row permutations."""
         self.S = np.zeros((self.sig_len, self.n_docs))
 
@@ -166,7 +192,7 @@ class CachedPairFinder(PairFinder):
     """
 
     def _compute_document_shingle_matrix(self):
-        cache_file = "cached_docshingle.npz"
+        cache_file = "cache/docshingle.npz"
         #self.DS = sparse.load_npz(cache_file)
         try:
             self.DS = sparse.load_npz(cache_file)
@@ -176,17 +202,17 @@ class CachedPairFinder(PairFinder):
             sparse.save_npz(open(cache_file, "wb"), self.DS)
 
     def _compute_signatures(self):
-        cache_file = "S_{}".format(self.sig_len)
+        cache_file = "cache/signature_{}_{}.npy".format(self.sig_len, self.signature_method)
         try:
-            self.S = cache.load(cache_file)
+            self.S = np.load(cache_file)
             assert self.S.shape == (self.sig_len, self.n_docs)
             print("Using cached signatures")
         except:
             super()._compute_signatures()
-            cache.save(self.S, cache_file)
+            np.save(open(cache_file, "wb"), self.S)
 
     def _fill_buckets(self):
-        cache_file = "cached_buckets_{}_{}_{}.pkl".format(
+        cache_file = "cache/buckets_{}_{}_{}.pkl".format(
             self.sig_len, self.n_bands, self.max_buckets)
         try:
             self.buckets = pickle.load(open(cache_file, "rb"))
@@ -206,6 +232,9 @@ def build(*args, **kwargs):
     """
     cached = kwargs.get('cached', False)
     del kwargs['cached']
+
+    if cached:
+        ensure_directory('cache')
 
     cls = CachedPairFinder if cached else PairFinder
     return cls(*args, **kwargs)

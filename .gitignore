@@ -1,9 +1,9 @@
 *.npy
 *.npz
-cached_*
 *.csv
 __pycache__/
 .Rhistory
 *.pdf
 experiment_*_std*
 *.txt
+/cache/

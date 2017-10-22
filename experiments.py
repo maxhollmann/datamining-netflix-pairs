@@ -5,7 +5,9 @@ from datetime import datetime
 import time
 import subprocess
 import os
+
 from csv_writer import CsvWriter
+from util import ensure_directory
 
 
 csv = CsvWriter("out/experiments.csv", append = True)
@@ -25,17 +27,21 @@ def count_lines_in_file(filename):
 
 
 def perform(params):
+    ensure_directory('logs')
+
     run_id = datetime.now().isoformat()
-    results_file = "experiment_{}.txt".format(run_id)
-    stdout_file = open("experiment_{}_stdout".format(run_id), "w")
-    stderr_file = open("experiment_{}_stderr".format(run_id), "w")
+    results_file = "results/experiment_{}.csv".format(run_id)
+    stdout_file = open("logs/experiment_{}_stdout".format(run_id), "w")
+    stderr_file = open("logs/experiment_{}_stderr".format(run_id), "w")
 
     cmd = [
         #"ulimit", "-Sv", "8000000000",
         "python3", "main.py",
-        "--results={}".format(results_file)
     ] + ["--{}".format("=".join([k, str(v)])) for k, v in params.items()] + [
-        str(int(np.random.uniform(0, 9999999))), "user_movie.npy"
+        str(int(np.random.uniform(0, 9999999))), "user_movie.npy",
+        "default",
+        "--extended",
+        "--results", results_file,
     ]
 
     print("Run {}: {}".format(run_id, " ".join(cmd)))
@@ -79,9 +85,9 @@ def main(args):
 
     for i in range(10000):
         grid.append({
-            'bands': np.random.randint(5, 30),
-            'rows': np.random.randint(2, 15),
-            'max-buckets': 100000 * np.random.randint(1, 100),
+            'bands': np.random.randint(15, 35),
+            'rows': np.random.randint(6, 9),
+            'max-buckets': 2800000,
         })
 
     # sensible limit for sig len
