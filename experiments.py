@@ -83,12 +83,18 @@ def main(args):
     #}))
     grid = []
 
-    for i in range(10000):
-        grid.append({
-            'bands': np.random.randint(15, 35),
-            'rows': np.random.randint(6, 9),
-            'max-buckets': 2800000,
-        })
+    candidates = [
+        {'bands': 30, 'rows': 6, 'max-buckets': 2800000},
+        {'bands': 27, 'rows': 6, 'max-buckets': 2800000},
+        {'bands': 32, 'rows': 7, 'max-buckets': 2800000},
+    ]
+    for i in range(1000):
+        grid += candidates
+        # grid.append({
+        #     'bands': np.random.randint(15, 35),
+        #     'rows': np.random.randint(6, 9),
+        #     'max-buckets': 2800000,
+        # })
 
     # sensible limit for sig len
     grid = [p for p in grid if p['bands'] * p['rows'] <= 350]

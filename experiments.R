@@ -8,12 +8,14 @@ d$sig_len = d$bands * d$rows
 d$batch = ifelse(as.character(d$run_id) < "2017-10-22T00:42", 1, 
                  ifelse(as.character(d$run_id) < "2017-10-22T01:33", 2, 
                         ifelse(as.character(d$run_id) < "2017-10-22T08:34", 3, 
-                               4)))
+                               ifelse(as.character(d$run_id) < "2017-10-22T18:00", 4, 
+                                      5))))
 
 d$signature_alg = factor(ifelse(d$batch %in% c(1), "permutations", "min-hashing"))
 
-d = d[d$batch >= 3, ]
+d = d[d$batch >= 5, ]
 d$batch = factor(d$batch)
+
 
 end = d[seq(nrow(d), 1, -1), ]
 end = end[!duplicated(end$run_id), ]
@@ -30,10 +32,10 @@ p1 = ggplot(d, aes(x = time, y = count,
 
 p2 = ggplot(end, aes(x = bands, y = rows,
                      size = count,
-                     fill = count)) +
+                     fill = batch)) +
   geom_point(aes(color = batch), shape = 21, alpha = .8)
 
 grid.arrange(p1, p2, ncol = 2)
 
 
-print(end[order(end$count), c("batch", "bands", "rows", "sig_len", "max_buckets", "count")])
+print(end[order(end$count), c("batch", "bands", "rows", "sig_len", "max_buckets", "count", "ppm")])
