@@ -1,0 +1,3 @@
+* TODO See if data can be deleted after creating DS
+* TODO Optimize Signature creation
+** DONE Try MinHashing

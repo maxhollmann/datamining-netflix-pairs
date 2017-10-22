@@ -19,11 +19,17 @@ def default(data, pf, args):
     found = 0
     for i, ((c1, c2), sim) in enumerate(candidates):
         if pf.jaccard_similarity(c1, c2) >= .5:
+            c1, c2 = min(c1, c2), max(c1, c2)
             csv.write([c1 + 1, c2 + 1])
             found += 1
             print("Found {} (at signature similarity {})".format(found, sim), end = '\r')
 
     return True
+
+
+def console(data, pf, args):
+    """Simply opens a prompt after preparing the algorithm."""
+    import code; code.interact(local=dict(globals(), **locals()))
 
 
 def get_candidate_distribution(data, pf, args):

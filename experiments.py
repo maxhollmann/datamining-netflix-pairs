@@ -50,7 +50,7 @@ def perform(params):
 
             count = count_lines_in_file(results_file)
             if count != last_count:
-                print("Run {}   Count at {}: {}".format(run_id, elapsed, count))
+                print("Run {}   Count at {}s: {}".format(run_id, int(elapsed), count))
                 csv.write([run_id, params['bands'], params['rows'], params['max-buckets'],
                            elapsed, count])
                 last_count = count
@@ -70,21 +70,22 @@ def perform(params):
 
 
 def main(args):
-    grid = list(ParameterGrid({
-        'bands': [7, 3, 11, 15, 20, 30, 40],
-        'rows' : [7, 3, 11, 15, 20, 30, 40],
-        'max-buckets': [5000000],
-    }))
+    #grid = list(ParameterGrid({
+    #    'bands': [7, 3, 11, 15, 20, 30, 40],
+    #    'rows' : [7, 3, 11, 15, 20, 30, 40],
+    #    'max-buckets': [5000000],
+    #}))
+    grid = []
 
     for i in range(10000):
         grid.append({
-            'bands': np.random.randint(2, 100),
-            'rows': np.random.randint(2, 100),
+            'bands': np.random.randint(5, 30),
+            'rows': np.random.randint(2, 15),
             'max-buckets': 100000 * np.random.randint(1, 100),
         })
 
     # sensible limit for sig len
-    grid = [p for p in grid if p['bands'] * p['rows'] <= 150]
+    grid = [p for p in grid if p['bands'] * p['rows'] <= 350]
 
     print("{} configurations".format(len(grid)))
     print("Starting {} workers".format(args.jobs))

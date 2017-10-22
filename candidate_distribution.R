@@ -27,7 +27,7 @@ print(nrow(d))
 fit = lm(jac_sim ~ sig_sim + I(sig_sim^2), d)
 #print(summary(fit))
 
-pred_sig = seq(0, 1, .01)
+pred_sig = seq(0, 1, .001)
 pred_jac = predict(fit, newdata = data.frame(sig_sim = pred_sig))
 
 

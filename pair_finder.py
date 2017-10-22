@@ -31,19 +31,31 @@ class PairFinder:
     def candidates(self):
         """Yields all candidate pairs and the similarity of their signatures.
 
+        This will filter out duplicate pairs (from different buckets)
+        and return the smaller document IDs first.
+
         Yields:
             tuple: ((c1, c2), similarity)
         """
+        done = set()
+
         for b in self.buckets.values():
             b = list(b)
             for i in range(len(b)):
                 for j in range(i + 1, len(b)):
-                    c1, c2 = b[i], b[j]
-                    sim = self.sig_sim(c1, c2)
-                    yield ((c1, c2), sim)
+                    c1, c2 = min(b[i], b[j]), max(b[i], b[j])
+                    c = (c1, c2)
+                    if c not in done:
+                        done.add(c)
+                        sim = self.sig_sim(c1, c2)
+                        yield ((c1, c2), sim)
 
     def count_candidates(self):
-        """Returns the number of candidate pairs without iterating over all of them."""
+        """Returns the number of candidate pairs without iterating over all of them.
+
+        This is an estimate an can overestimate the true value quite a
+        bit, due to duplicates.
+        """
         return int(np.sum([
             n * (n - 1) / 2
             for n in [len(b) for b in self.buckets.values()]
@@ -78,11 +90,34 @@ class PairFinder:
         print("Done in {}s".format(time.time() - t))
 
     def _compute_signatures(self):
-        self.S = np.zeros((self.sig_len, self.n_docs))
-
         # 12.7523s * siglen
         print("Computing signatures...")
         t = time.time()
+        self._compute_signatures_minhash()
+        print("Done in {}s".format(time.time() - t))
+
+    def _compute_signatures_minhash(self):
+        """Creates document signatures using min-hashing."""
+        # Generate sig_len hashfunctions (hash(x) = (a*x + b) % prime)
+        prime = 17783 # prime number > number of shingles
+        a = np.random.choice(self.n_shingles, size=self.sig_len, replace=False)
+        b = np.random.choice(self.n_shingles, size=self.sig_len, replace=False)
+        b.shape = (self.sig_len, 1)
+
+        self.S = np.full((self.sig_len, self.n_docs), prime)
+
+        for r in range(self.n_shingles): # row r
+            if r % 100 == 0:
+                print("{}% done".format(int(r / self.n_shingles * 100)), end = '\r')
+
+            _, docs = np.nonzero(self.DS[r, :])
+            h = np.add(np.outer(a, r), b) % prime
+            self.S[:, docs] = np.minimum(self.S[:, docs], h)
+
+    def _compute_signatures_permutations(self):
+        """Creates document signatures using random row permutations."""
+        self.S = np.zeros((self.sig_len, self.n_docs))
+
         for i in range(self.sig_len):
             # Generate random permutation of rows
             DSp = self.DS[np.random.permutation(self.DS.shape[0]), :]
@@ -97,8 +132,6 @@ class PairFinder:
             self.S[i, :] = nz_row[first_nz_i]
 
             print("  {}/{} done in {}s".format(i+1, self.sig_len, time.time() - t), end = '\r')
-
-        print("Done in {}s".format(time.time() - t))
 
 
     def _fill_buckets(self):
