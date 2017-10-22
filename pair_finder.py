@@ -45,7 +45,7 @@ class PairFinder:
         self.signature_method = signature_method
         self.sparse_ds = use_sparse
 
-        if self.signature_method == 'permutation' and !self.sparse_ds:
+        if self.signature_method == 'permutation' and not self.sparse_ds:
             raise RuntimeError("Permutation is only supported with a sparse matrix.")
 
     def prepare(self):
@@ -218,11 +218,14 @@ class CachedPairFinder(PairFinder):
         cache_file = "cache/docshingle.npz"
         #self.DS = sparse.load_npz(cache_file)
         try:
+            if not self.sparse_ds:
+                raise Exception("not caching dense matrix")
             self.DS = sparse.load_npz(cache_file)
             print("Using cached document-shingle matrix")
         except:
             super()._compute_document_shingle_matrix()
-            sparse.save_npz(open(cache_file, "wb"), self.DS)
+            if self.sparse_ds:
+                sparse.save_npz(open(cache_file, "wb"), self.DS)
 
     def _compute_signatures(self):
         cache_file = "cache/signature_{}_{}.npy".format(self.sig_len, self.signature_method)

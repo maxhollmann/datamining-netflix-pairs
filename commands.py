@@ -29,6 +29,7 @@ def default(data, pf, args, start_t):
 
     print("Verifying candidates...")
     found = 0
+    found_times = np.array([])
     for i, ((c1, c2), sim) in enumerate(candidates):
         jac_sim = pf.jaccard_similarity(c1, c2)
         elapsed_t = time.time() - start_t
@@ -40,7 +41,23 @@ def default(data, pf, args, start_t):
             else:
                 csv.write([c1, c2])
             found += 1
+            found_times = np.append(found_times, time.time() - start_t)
             print("Found {} (at signature similarity {}, after {}s)".format(found, sim, elapsed_t), end = '\r')
+
+        # stop when 30 minutes are over
+        if elapsed_t > 1800 - 2:
+            print("\nTime's up, stopping.")
+            break
+
+        # every 1000 candidates, check whether rate is so low we should stop
+        if found >= 100 and i % 100 == 0:
+            if elapsed_t - found_times[-10] > 60: # less than 10 per minute
+                print("\nRate is slowing down, stopping.")
+                break
+
+    print("Finished in {}s.".format(elapsed_t))
+    print("Found {} pairs, {} per minute.".format(found, found / elapsed_t * 60))
+
 
     return True
 

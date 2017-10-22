@@ -79,25 +79,25 @@ def perform(params):
 
 
 def main(args):
-    #grid = list(ParameterGrid({
-    #    'bands': [7, 3, 11, 15, 20, 30, 40],
-    #    'rows' : [7, 3, 11, 15, 20, 30, 40],
-    #    'max-buckets': [5000000],
-    #}))
-    grid = []
+    grid = list(ParameterGrid({
+        'bands': [18, 19, 20, 21, 22, 23, 24, 25, 26],
+        'rows' : [6],
+        'max-buckets': [5000000],
+    })) * 40
+    # grid = []
 
-    candidates = [
-        {'bands': 30, 'rows': 6, 'max-buckets': 2800000},
-        {'bands': 27, 'rows': 6, 'max-buckets': 2800000},
-        {'bands': 32, 'rows': 7, 'max-buckets': 2800000},
-    ]
-    for i in range(1000):
-        grid += candidates
-        # grid.append({
-        #     'bands': np.random.randint(15, 35),
-        #     'rows': np.random.randint(6, 9),
-        #     'max-buckets': 2800000,
-        # })
+    # candidates = [
+    #     {'bands': 30, 'rows': 6, 'max-buckets': 2800000},
+    #     {'bands': 27, 'rows': 6, 'max-buckets': 2800000},
+    #     {'bands': 32, 'rows': 7, 'max-buckets': 2800000},
+    # ]
+    # for i in range(1000):
+    #     # grid += candidates
+    #     grid.append({
+    #         'bands': np.random.randint(3, 35),
+    #         'rows': np.random.randint(3, 35),
+    #         'max-buckets': 2800000,
+    #     })
 
     # sensible limit for sig len
     grid = [p for p in grid if p['bands'] * p['rows'] <= 350]
