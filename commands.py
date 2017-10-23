@@ -25,7 +25,7 @@ def default(data, pf, args, start_t):
     print("Done in {}s".format(time.time() - t))
 
     csv_file = args.results if 'results' in args else 'results.txt'
-    csv = CsvWriter(csv_file, append = False)
+    csv = CsvWriter(csv_file, append=not args.dont_append_results)
 
     print("Verifying candidates...")
     found = 0

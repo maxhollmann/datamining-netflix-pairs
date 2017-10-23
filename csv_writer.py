@@ -5,7 +5,7 @@ from util import ensure_directory
 
 
 class CsvWriter:
-    def __init__(self, filename, append = False):
+    def __init__(self, filename, append = False, delimiter=","):
         ensure_directory(f=filename)
 
         # open file in appropriate mode
@@ -13,7 +13,7 @@ class CsvWriter:
         self.appending = append and os.path.exists(filename) and os.path.getsize(filename) > 0
         self.f = open(filename, mode)
 
-        self.writer = csv.writer(self.f)
+        self.writer = csv.writer(self.f, delimiter=delimiter)
 
     def write_header(self, header):
         if not self.appending:

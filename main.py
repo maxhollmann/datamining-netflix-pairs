@@ -76,6 +76,8 @@ if __name__ == '__main__':
     parser_default.set_defaults(command=commands.default)
     parser_default.add_argument('--results', default="results.txt",
                                 help='File to store pairs of user IDs in.')
+    parser_default.add_argument('--dont-append-results', action='store_true',
+                                help='Overwrite results file instead of appending.')
     parser_default.add_argument('--extended', action='store_true',
                                 help='Store more information than just the user IDs.')
 
