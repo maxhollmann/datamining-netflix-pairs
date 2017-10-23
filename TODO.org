@@ -1,7 +1,0 @@
-* DONE See if data can be deleted after creating DS
-* DONE Optimize Signature creation
-** DONE Try MinHashing
-* DONE Stop criterion
-** DONE Just before 30 minutes
-** DONE When pairs per minute starts decreasing
-* DONE Return pairs with similarity > .5, not >= .5
