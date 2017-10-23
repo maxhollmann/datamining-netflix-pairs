@@ -17,7 +17,7 @@ def default(data, pf, args, start_t):
     print("Getting all candidates...")
     t = time.time()
     candidates = list(pf.candidates())
-    print("Done in {}s".format(time.time() - t))
+    print("Done, got {} candidates in {}s".format(len(candidates), time.time() - t))
 
     print("Sorting candidates...")
     t = time.time()

@@ -54,11 +54,14 @@ class PairFinder:
         self._compute_signatures()
         self._fill_buckets()
 
-    def candidates(self):
+    def candidates(self, threshold = 0.0):
         """Yields all candidate pairs and the similarity of their signatures.
 
         This will filter out duplicate pairs (from different buckets)
         and return the smaller document IDs first.
+
+        Args:
+            threshold (float): Require this similarity for a candidate to be yielded.
 
         Yields:
             tuple: ((c1, c2), similarity)
@@ -74,7 +77,8 @@ class PairFinder:
                     if c not in done:
                         done.add(c)
                         sim = self.sig_sim(c1, c2)
-                        yield ((c1, c2), sim)
+                        if sim >= threshold:
+                            yield ((c1, c2), sim)
 
     def count_candidates(self):
         """Returns the number of candidate pairs without iterating over all of them.
@@ -105,7 +109,7 @@ class PairFinder:
     def print_stats(self):
         """Prints useful stats for model diagnostics."""
         print("Used {}/{} buckets".format(len(self.buckets), self.max_buckets))
-        print("{} candidate pairs".format(self.count_candidates()))
+        print("Up to {} candidate pairs".format(self.count_candidates()))
 
 
 

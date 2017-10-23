@@ -38,16 +38,19 @@ p1 = ggplot(d, aes(x = time, y = count,
 
 end$fail_rate = 0
 for (b in unique(d$bands)) {
-  end[end$bands == b, ]$fail_rate = mean(end[end$bands == b, ]$count < 200)
+  end[end$bands == b, ]$fail_rate = mean(end[end$bands == b, ]$count < 150)
 }
 p2 = ggplot(end, aes(x = bands, y = count,
                      size = ppm,
                      fill = fail_rate)) +
   geom_point(color = "black", shape = 21, alpha = .3, position = position_jitter(0.24, 0.24)) +
   scale_size(range = c(0.2, 20)) +
-  scale_fill_continuous(low = 'green', high = 'red')
+  scale_fill_continuous(low = 'green', high = 'red') +
+  scale_x_continuous(name = "Bands",
+                     breaks = sort(unique(end$bands)))
 
 grid.arrange(p1, p2, ncol = 2)
 
 
-print(end[order(end$count), c("run_id", "batch_id", "bands", "rows", "sig_len", "max_buckets", "count", "ppm")])
+end = end[end$fail_rate < 0.05, ]
+print(end[order(end$count), c("run_id", "batch_id", "bands", "rows", "sig_len", "max_buckets", "fail_rate", "count", "ppm")])
