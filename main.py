@@ -1,5 +1,6 @@
 import numpy as np
 import time
+import gc
 
 import data
 import pair_finder
@@ -34,7 +35,10 @@ def main(args):
     pairfinder.print_stats()
     print("")
 
-    return args.command(df, pairfinder, args, start_t)
+    del df
+    gc.collect()
+
+    return args.command(pairfinder, args, start_t)
 
 
 if __name__ == '__main__':

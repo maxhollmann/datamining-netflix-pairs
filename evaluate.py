@@ -2,6 +2,7 @@ import numpy as np
 import time
 import subprocess
 import os
+import gc
 
 import data
 from csv_writer import CsvWriter
@@ -10,12 +11,12 @@ from util import ensure_directory
 
 """
 This file simulates the evaluation environment and stores results
-of the algorithm with default settings.
+as a CSV.
 """
 
 
 csv = CsvWriter("diagnostics/out/evaluation.csv", append = True)
-csv.write_header(['batch', 'run', 'found', 'incorrect', 'time', 'ppm', 'terminated'])
+csv.write_header(['note', 'batch', 'run', 'found', 'incorrect', 'time', 'ppm', 'terminated'])
 
 def jaccard_sim(data, u1, u2):
     m1 = data.movie[data.user == u1]
@@ -23,10 +24,12 @@ def jaccard_sim(data, u1, u2):
     return len(np.intersect1d(m1, m2)) / len(np.union1d(m1, m2))
 
 
-def run_evaluation(batch = 0, runs = 5):
+def run_evaluation(note, batch = 0, runs = 5):
     for run in range(runs):
         cmd = [
             "python3", "main.py",
+            "--rows", str(args.rows),
+            "--bands", str(args.bands),
             str(int(np.random.uniform(0, 9999999))), "user_movie.npy",
         ]
 
@@ -62,7 +65,9 @@ def run_evaluation(batch = 0, runs = 5):
             found = 0
             incorrect = 0
 
-            with data.load() as df:
+            if os.path.exists("results.txt"):
+                df = data.load()
+
                 with open("results.txt") as f:
                     for l in f:
                         u1, u2 = l.split(",")
@@ -74,8 +79,11 @@ def run_evaluation(batch = 0, runs = 5):
                         else:
                             found += 1
 
+                del df
+                gc.collect()
+
             csv.write([
-                batch, run,
+                note, batch, run,
                 found, incorrect,
                 elapsed, found / elapsed * 60,
                 terminated
@@ -86,7 +94,7 @@ def run_evaluation(batch = 0, runs = 5):
 def main(args):
     for batch in range(args.batches):
         print("Batch {}/{}\n".format(batch+1, args.batches))
-        run_evaluation(batch, args.runs)
+        run_evaluation(args.note, batch, args.runs)
 
 
 if __name__ == '__main__':
@@ -94,8 +102,11 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Evaluates the default setup.')
+    parser.add_argument('--bands', default = 23, type = int)
+    parser.add_argument('--rows', default = 6, type = int)
     parser.add_argument('--batches', default = 1, type = int)
     parser.add_argument('--runs', default = 5, type = int)
+    parser.add_argument('--note', default = '')
     args = parser.parse_args(sys.argv[1:])
 
     main(args)

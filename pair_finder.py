@@ -3,6 +3,7 @@ from scipy import sparse
 from collections import defaultdict
 import time
 import pickle
+import gc
 
 from util import ensure_directory
 
@@ -34,9 +35,8 @@ class PairFinder:
         if sig_len % bands != 0:
             raise Exception("sig_len ({}) must be divisible by bands ({})".format(sig_len, bands))
 
-        self.data = data
-        self.docs = self.data.iloc[:, 0]
-        self.shingles = self.data.iloc[:, 1]
+        self.docs = data.iloc[:, 0]
+        self.shingles = data.iloc[:, 1]
         self.n_docs = np.max(self.docs) + 1
         self.n_shingles = np.max(self.shingles) + 1
         self.sig_len = sig_len
@@ -125,6 +125,11 @@ class PairFinder:
         else:
             self.DS = np.zeros((self.n_shingles + 1, self.n_docs + 1), dtype=np.uint8)
         self.DS[self.shingles, self.docs] = 1
+
+        del self.shingles
+        del self.docs
+        gc.collect()
+
         print("Done in {}s".format(time.time() - t))
 
     def _compute_signatures(self):
@@ -163,6 +168,10 @@ class PairFinder:
             _, docs = np.nonzero(csr[r, :])
             h = np.add(np.outer(a, r), b) % prime
             self.S[:, docs] = np.minimum(self.S[:, docs], h)
+
+        if not self.sparse_ds:
+            del csr
+            gc.collect()
 
     def _compute_signatures_permutation(self):
         """Creates document signatures using random row permutations.

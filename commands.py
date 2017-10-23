@@ -7,7 +7,7 @@ from csv_writer import CsvWriter
 """Commands that can be called from the command line."""
 
 
-def default(data, pf, args, start_t):
+def default(pf, args, start_t):
     """Evaluates candidates, highest signature similarity first.
 
     Results are written to the file given by args.results (--results
@@ -25,7 +25,10 @@ def default(data, pf, args, start_t):
     print("Done in {}s".format(time.time() - t))
 
     csv_file = args.results if 'results' in args else 'results.txt'
-    csv = CsvWriter(csv_file, append=not args.dont_append_results)
+    append_results = not args.dont_append_results if 'dont_append_results' in args else True
+    extended_results = args.extended if 'extended' in args else False
+
+    csv = CsvWriter(csv_file, append=append_results)
 
     print("Verifying candidates...")
     found = 0
@@ -34,9 +37,9 @@ def default(data, pf, args, start_t):
         jac_sim = pf.jaccard_similarity(c1, c2)
         elapsed_t = time.time() - start_t
 
-        if jac_sim >= .5:
+        if jac_sim > .5:
             c1, c2 = min(c1, c2) + 1, max(c1, c2) + 1
-            if args.extended:
+            if extended_results:
                 csv.write([c1, c2, sim, jac_sim, i, elapsed_t])
             else:
                 csv.write([c1, c2])
@@ -49,7 +52,7 @@ def default(data, pf, args, start_t):
             print("\nTime's up, stopping.")
             break
 
-        # every 1000 candidates, check whether rate is so low we should stop
+        # every 100 candidates, check whether rate is so low we should stop
         if found >= 100 and i % 100 == 0:
             if elapsed_t - found_times[-10] > 60: # less than 10 per minute
                 print("\nRate is slowing down, stopping.")
@@ -62,13 +65,13 @@ def default(data, pf, args, start_t):
     return True
 
 
-def console(data, pf, args, start_t):
+def console(pf, args, start_t):
     """Simply opens a prompt after preparing the algorithm."""
     import code; code.interact(local=dict(globals(), **locals()))
     return True
 
 
-def get_candidate_distribution(data, pf, args, start_t):
+def get_candidate_distribution(pf, args, start_t):
     """Samples pairs from candidates, stratified by signature similarity.
 
     The result is stored in a CSV, including the signature similarity,
@@ -108,7 +111,7 @@ def get_candidate_distribution(data, pf, args, start_t):
     return True
 
 
-def get_jaccard_distribution(data, pf, args, start_t):
+def get_jaccard_distribution(pf, args, start_t):
     """Samples random pairs and saves their Jaccard similarity to CSV.
 
     The result is used by jaccard_distribution.R to fit an
@@ -126,7 +129,7 @@ def get_jaccard_distribution(data, pf, args, start_t):
     return True
 
 
-def benchmark(data, pf, args, start_t):
+def benchmark(pf, args, start_t):
     """Runs benchmarks for different things."""
     print("Setup time: {}s".format(time.time() - start_t))
 
