@@ -4,7 +4,7 @@ import os
 def calculate_algorithm_params(args):
     if args.sig_len is None and args.bands is None and args.rows is None:
         sig_len = 132
-        bands = 22
+        bands = 24
     elif args.sig_len and args.bands:
         sig_len = args.sig_len
         bands = args.bands

@@ -22,8 +22,8 @@ for (batch in levels(d$batch)) {
     ppm = mean(b$ppm),
     ppm.sd = sd(b$ppm),
   
-    fount = mean(b$found),
-    fount.sd = sd(b$found),
+    found = mean(b$found),
+    found.sd = sd(b$found),
     
     median_time = median(b$time / 60)
   ))
@@ -31,3 +31,5 @@ for (batch in levels(d$batch)) {
 
 print(tbl)
 
+t23 = tbl[grepl("23", tbl$batch), ]
+t24 = tbl[grepl("24", tbl$batch), ]
