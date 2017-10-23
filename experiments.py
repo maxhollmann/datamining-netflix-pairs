@@ -10,7 +10,7 @@ from csv_writer import CsvWriter
 from util import ensure_directory
 
 
-csv = CsvWriter("out/experiments.csv", append = True)
+csv = CsvWriter("diagnostics/out/experiments.csv", append = True)
 csv.write_header(['batch_id', 'run_id', 'bands', 'rows', 'max_buckets', 'time', 'count'])
 
 batch_id = datetime.now().isoformat()
@@ -32,7 +32,7 @@ def perform(params):
     ensure_directory('logs')
 
     run_id = datetime.now().isoformat()
-    results_file = "results/experiment_{}.csv".format(run_id)
+    results_file = "diagnostics/experiment_results/results_{}.csv".format(run_id)
     stdout_file = open("logs/experiment_{}_stdout".format(run_id), "w")
     stderr_file = open("logs/experiment_{}_stderr".format(run_id), "w")
 

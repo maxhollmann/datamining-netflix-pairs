@@ -78,8 +78,7 @@ def get_candidate_distribution(data, pf, args, start_t):
     """
     candidates = list(pf.candidates())
 
-    csv_file = "out/candidate_dist.csv".format(
-        pf.n_bands, int(pf.sig_len / pf.n_bands), pf.max_buckets)
+    csv_file = args.results
     csv = CsvWriter(csv_file, append = True)
     csv.write_header([
         'run_id',
@@ -115,7 +114,7 @@ def get_jaccard_distribution(data, pf, args, start_t):
     The result is used by jaccard_distribution.R to fit an
     distribution to the data.
     """
-    csv = CsvWriter("out/jaccard_dist.csv", append = True)
+    csv = CsvWriter(args.results, append = True)
     csv.write_header(['u1', 'u2', 'jac_sim', 'sig_sim'])
 
     for i, (u1, u2) in enumerate(zip(np.random.permutation(pf.n_docs),

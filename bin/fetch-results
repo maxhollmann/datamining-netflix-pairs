@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+scp ec:pairs/diagnostics/out/experiments.csv diagnostics/out/ec_experiments.csv
+rsync -r ec:pairs/results ec_results

@@ -3,8 +3,8 @@ import os
 
 def calculate_algorithm_params(args):
     if args.sig_len is None and args.bands is None and args.rows is None:
-        sig_len = 133
-        bands = 19
+        sig_len = 150
+        bands = 25
     elif args.sig_len and args.bands:
         sig_len = args.sig_len
         bands = args.bands
@@ -15,7 +15,7 @@ def calculate_algorithm_params(args):
         sig_len = args.rows * args.bands
         bands = args.bands
     else:
-        raise ValueError("You need to specify two of the arguments --sig-len, --rows, and --bands")
+        raise ValueError("You need to specify none or two of the arguments --sig-len, --rows, and --bands")
 
     return sig_len, bands
 

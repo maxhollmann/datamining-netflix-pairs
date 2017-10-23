@@ -53,7 +53,7 @@ if __name__ == '__main__':
     params_group.add_argument('--sig-len', type=int, help='Signature length.')
     params_group.add_argument('--rows', type=int, help='Signature rows per band.')
     params_group.add_argument('--bands', type=int, help='Number of bands.')
-    params_group.add_argument('--max-buckets', type=int, default=2800000, help='Maximum number of buckets.')
+    params_group.add_argument('--max-buckets', type=int, default=5000000, help='Maximum number of buckets.')
     params_group.add_argument('--signature-method', default='minhash',
                               help='Method for generating signatures. '
                               'One of minhash (default) and permutation.')
@@ -83,14 +83,14 @@ if __name__ == '__main__':
     parser_candidate_dist = command_parsers.add_parser('candidate-dist',
                                                        help=cmd_help(commands.get_candidate_distribution))
     parser_candidate_dist.set_defaults(command=commands.get_candidate_distribution)
-    parser_candidate_dist.add_argument('--results', default="out/candidate_dist.csv",
+    parser_candidate_dist.add_argument('--results', default="diagnostics/out/candidate_dist.csv",
                                        help='File to store distribution in (CSV).')
 
     # jaccard-dist command
     parser_jaccard_dist = command_parsers.add_parser('jaccard-dist',
                                                      help=cmd_help(commands.get_jaccard_distribution))
     parser_jaccard_dist.set_defaults(command=commands.get_jaccard_distribution)
-    parser_jaccard_dist.add_argument('--results', default="out/jaccard_dist.csv",
+    parser_jaccard_dist.add_argument('--results', default="diagnostics/out/jaccard_dist.csv",
                                      help='File to store distribution in (CSV).')
 
     # console command

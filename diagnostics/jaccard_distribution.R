@@ -23,6 +23,3 @@ lines(s, djaccard(s, opt$estimate), col = 'red')
 
 legend(0.25, 6, legend = c("Data", "Fitted distribution"), lwd = 1, col = c('green', 'red'))
 
-
-#plot(jac_sim ~ sig_sim, d)
-#abline(0, 1, col = 'green')
